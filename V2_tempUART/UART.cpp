@@ -66,38 +66,42 @@ void UART::RX()
 			//Bytes received
 			//printf("%i bytes read : %s", i, rx_buffer);
 			
-			// Analog Data
-			if (rx_buffer[0] == 'A')
+			// DATA string = Axxxxx D xx x
+			
+			if (rx_buffer[0] == 'S')
 			{
-				//cout << "Analog RAW: " << rx_buffer << endl;
-				copy(rx_buffer + 1, rx_buffer + sizeof(rx_buffer), rx_buffer + 0);
+				//cout << "RAW: " << rx_buffer << endl;
+				char * pEnd;
+				float temp1, temp2, temp3, temp4, temp5;
 				float x;
+				
+				temp1 = strtol(rx_buffer, &pEnd, 16);
+				temp2 = strtol(pEnd, &pEnd, 16);
+				temp3 = strtol(pEnd, &pEnd, 16);
+				temp4 = strtol(pEnd, &pEnd, 16);
+				temp5 = strtol(pEnd, &pEnd, 16);
+				
+				// Removes "A" from data string and stores in 'x'
+				copy(temp2 + 1, temp2 + sizeof(temp2), temp2 + 0);
 				stringstream stream;
-				stream << rx_buffer;
+				stream << temp2;
 				stream >> x;
 
 				x = ((x/10000) - 1.8641)/(-11.71/1000);  // first order
 				
+				cout << temp1 << ": " << endl;
 				cout << "Analog: " << x << endl;
-				SlaveData.push_back(x);
-				memset(rx_buffer, 0, sizeof(rx_buffer));
-			}
-			else if (rx_buffer[0] == 'D')
-			{
-				//cout << "Digital RAW: " << rx_buffer << endl;
-				char * pEnd;
-				float temp1, temp2, temp3;
-				temp1 = strtol(rx_buffer, &pEnd, 16);
-				temp2 = strtol(pEnd, &pEnd, 16);
-				temp3 = strtol(pEnd, &pEnd, 16);
 				
-				float temperature = temp2 + temp3 * 0.0625;
+				
+				float temperature = temp4 + temp5 * 0.0625;
 				SlaveData.push_back(temperature);
 				cout << "Digital: "  << temperature << endl;
+				
+				
 				memset(rx_buffer, 0, sizeof(rx_buffer));
-
-
+				memset(rx_buffer, 0, sizeof(rx_buffer));
 			}
+			
 			
 			else
 			{
